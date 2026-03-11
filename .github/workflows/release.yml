@@ -1,0 +1,74 @@
+name: Release Skill
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Create Skill Package
+        run: |
+          mkdir -p dist
+          tar -czf dist/wecom-channel-fix-${{ github.ref_name }}.tar.gz skills/
+          zip -r dist/wecom-channel-fix-${{ github.ref_name }}.zip skills/
+      
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          body: |
+            ## 🎉 OpenClaw Skill Release
+            
+            ### 安装方式
+            
+            #### 方式 1：ClawHub
+            ```bash
+            clawhub install wecom-channel-fix
+            ```
+            
+            #### 方式 2：Git 克隆
+            ```bash
+            git clone https://github.com/${{ github.repository }}.git
+            cd openclaw-skill-wecom-channel-fix
+            ./install.sh
+            ```
+            
+            #### 方式 3：手动下载
+            下载下方附件，解压后复制到 `~/.openclaw/skills/`
+            
+            ### 更新日志
+            Auto-generated release
+            
+          draft: false
+          prerelease: false
+      
+      - name: Upload Skill Tarball
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./dist/wecom-channel-fix-${{ github.ref_name }}.tar.gz
+          asset_name: wecom-channel-fix-${{ github.ref_name }}.tar.gz
+          asset_content_type: application/gzip
+      
+      - name: Upload Skill Zip
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./dist/wecom-channel-fix-${{ github.ref_name }}.zip
+          asset_name: wecom-channel-fix-${{ github.ref_name }}.zip
+          asset_content_type: application/zip
